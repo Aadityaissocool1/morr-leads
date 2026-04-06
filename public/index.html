@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MORR Leads</title>
+
+  <!-- LOAD DATA -->
+  <script src="data.js"></script>
+
+  <!-- CHART -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #020617;
+      color: white;
+      padding: 40px;
+    }
+
+    h1 {
+      font-size: 32px;
+    }
+
+    .cards {
+      display: flex;
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .card-box {
+      flex: 1;
+      padding: 20px;
+      border-radius: 12px;
+      background: #0f172a;
+      text-align: center;
+    }
+
+    .high { border: 1px solid red; }
+    .medium { border: 1px solid orange; }
+
+    .lead {
+      background: #0f172a;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: 0.3s;
+    }
+
+    .lead.marked {
+      opacity: 0.4;
+    }
+
+    button {
+      background: green;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+    }
+
+    canvas {
+      max-width: 300px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🔥 Top Leads</h1>
+<p>Smart prioritized contacts</p>
+
+<div class="cards">
+  <div class="card-box" id="total"></div>
+  <div class="card-box high" id="high"></div>
+  <div class="card-box medium" id="medium"></div>
+</div>
+
+<input id="search" placeholder="Search name..." />
+
+<div id="list"></div>
+
+<canvas id="chart"></canvas>
+
+<script>
+
+console.log(data); // DEBUG
+
+function render() {
+
+  let filtered = data.filter(x =>
+    x.name.toLowerCase().includes(document.getElementById("search").value.toLowerCase())
+  );
+
+  document.getElementById("total").innerHTML =
+    `<h2>${data.length}</h2>Total Leads`;
+
+  document.getElementById("high").innerHTML =
+    `<h2>${data.filter(x => x.priority === "high").length}</h2>High Priority`;
+
+  document.getElementById("medium").innerHTML =
+    `<h2>${data.filter(x => x.priority === "medium").length}</h2>Medium Priority`;
+
+  document.getElementById("list").innerHTML = filtered.map((lead, i) => `
+    <div class="lead ${lead.marked ? "marked" : ""}">
+      <div>
+        <b>${lead.name}</b><br>
+        ${lead.company}<br>
+        ${lead.position}
+      </div>
+
+      <div>
+        Score: ${lead.score}
+        <button onclick="markLead(${i})">Mark</button>
+      </div>
+    </div>
+  `).join("");
+
+  // DESTROY OLD CHART IF EXISTS
+  if (window.myChart) {
+    window.myChart.destroy();
+  }
+
+  window.myChart = new Chart(document.getElementById("chart"), {
+    type: "doughnut",
+    data: {
+      labels: ["High", "Medium"],
+      datasets: [{
+        data: [
+          data.filter(x => x.priority === "high").length,
+          data.filter(x => x.priority === "medium").length
+        ]
+      }]
+    }
+  });
+}
+
+function markLead(i) {
+  data[i].marked = !data[i].marked;
+  render();
+}
+
+document.getElementById("search").addEventListener("input", render);
+
+render();
+
+</script>
+
+</body>
+</html>

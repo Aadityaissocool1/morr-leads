@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Top Leads</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(180deg,#020617,#020617,#020617);
+  color:white;
+}
+
+.container{
+  width:80%;
+  margin:auto;
+  padding-top:40px;
+}
+
+h1{
+  font-size:32px;
+}
+
+.sub{
+  color:#94a3b8;
+  margin-bottom:20px;
+}
+
+.search-row{
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
+}
+
+input,select{
+  padding:12px;
+  border-radius:8px;
+  border:none;
+  background:#1e293b;
+  color:white;
+}
+
+.card{
+  background:linear-gradient(90deg,#2a0f13,#0f172a);
+  padding:20px;
+  border-radius:12px;
+  margin-bottom:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-left:4px solid red;
+  transition:0.3s;
+}
+
+.card.medium{
+  border-left:4px solid orange;
+}
+
+.card.contacted{
+  opacity:0.4;
+  transform:scale(0.98);
+}
+
+.right{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.badge{
+  padding:5px 10px;
+  border-radius:8px;
+  font-size:12px;
+}
+
+.score{
+  background:#064e3b;
+}
+
+.high{
+  background:#7f1d1d;
+}
+
+.medium{
+  background:#78350f;
+}
+
+button{
+  padding:8px 14px;
+  border:none;
+  border-radius:8px;
+  background:#22c55e;
+  color:white;
+  cursor:pointer;
+}
+
+.toast{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#22c55e;
+  padding:12px 20px;
+  border-radius:8px;
+  display:none;
+}
+
+.undo{
+  margin-left:10px;
+  background:black;
+  padding:5px 10px;
+  border-radius:6px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🔥 Top Leads</h1>
+<div class="sub">Smart prioritized contacts</div>
+
+<div class="search-row">
+<input id="search" placeholder="Search name...">
+<select id="filter">
+<option value="all">All</option>
+<option value="high">High</option>
+<option value="medium">Medium</option>
+</select>
+</div>
+
+<div id="list"></div>
+
+</div>
+
+<div id="toast" class="toast">
+Marked as contacted
+<span class="undo" onclick="undo()">Undo</span>
+</div>
+
+<script src="data.js"></script>
+
+<script>
+
+let last=null
+
+let leads = JSON.parse(localStorage.getItem("leads")) || data
+
+function save(){
+  localStorage.setItem("leads",JSON.stringify(leads))
+}
+
+function render(){
+
+let q = document.getElementById("search").value.toLowerCase()
+let f = document.getElementById("filter").value
+
+let list=document.getElementById("list")
+list.innerHTML=""
+
+leads
+.filter(l=>{
+  return l.name.toLowerCase().includes(q)
+})
+.filter(l=>{
+  if(f==="all") return true
+  return l.priority===f
+})
+.forEach((l,i)=>{
+
+let div=document.createElement("div")
+
+div.className="card "+(l.priority==="medium"?"medium":"")+(l.status==="contacted"?" contacted":"")
+
+div.innerHTML=`
+<div>
+<b>${l.name}</b><br>
+${l.company} - ${l.role}
+</div>
+
+<div class="right">
+<span class="badge score">Score: ${l.score}</span>
+<span class="badge ${l.priority}">${l.priority}</span>
+<button onclick="mark(${i})">Mark</button>
+</div>
+`
+
+list.appendChild(div)
+
+})
+
+}
+
+function mark(i){
+last=i
+leads[i].status="contacted"
+save()
+render()
+showToast()
+}
+
+function undo(){
+if(last!==null){
+leads[last].status="not_contacted"
+save()
+render()
+}
+}
+
+function showToast(){
+let t=document.getElementById("toast")
+t.style.display="block"
+setTimeout(()=>t.style.display="none",3000)
+}
+
+document.getElementById("search").addEventListener("input",render)
+document.getElementById("filter").addEventListener("change",render)
+
+render()
+
+</script>
+
+</body>
+</html>
